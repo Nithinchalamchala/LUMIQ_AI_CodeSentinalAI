@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+anthropic
+gitpython
+pylint
+bandit
+radon
+pytest
+python-dotenv
+pydantic
+aiofiles

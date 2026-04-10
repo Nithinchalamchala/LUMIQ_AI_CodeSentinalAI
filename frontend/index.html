@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeSentinel AI — Autonomous Code Review Agent</title>
+    <meta name="description" content="AI-powered multi-agent code review pipeline that analyzes, plans, fixes, and verifies code autonomously.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <!-- ─── Background Effects ─── -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-glow bg-glow-3"></div>
+
+    <!-- ─── Header ─── -->
+    <header class="header" id="header">
+        <div class="header-inner">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <path d="M16 2L4 8v16l12 6 12-6V8L16 2z" stroke="url(#logoGrad)" stroke-width="2" fill="none"/>
+                        <path d="M10 16l4 4 8-8" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <defs>
+                            <linearGradient id="logoGrad" x1="4" y1="2" x2="28" y2="30">
+                                <stop stop-color="#7C3AED"/>
+                                <stop offset="1" stop-color="#06B6D4"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <h1>CodeSentinel<span class="accent">AI</span></h1>
+                    <span class="tagline">Autonomous Code Review Agent</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="status-badge" id="globalStatus">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Ready</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ─── Main Content ─── -->
+    <main class="main">
+        <!-- ─── Input Panel ─── -->
+        <section class="panel input-panel" id="inputPanel">
+            <div class="panel-header">
+                <h2>🎯 Start a Code Review</h2>
+                <p class="panel-desc">Point the AI agents at a project to analyze, fix, and verify</p>
+            </div>
+            <div class="input-form" id="inputForm">
+                <div class="input-tabs">
+                    <button class="input-tab active" data-tab="demo" id="tabDemo">
+                        <span class="tab-icon">⚡</span> Try Demo
+                    </button>
+                    <button class="input-tab" data-tab="path" id="tabPath">
+                        <span class="tab-icon">📁</span> Local Path
+                    </button>
+                    <button class="input-tab" data-tab="url" id="tabUrl">
+                        <span class="tab-icon">🔗</span> Git URL
+                    </button>
+                </div>
+                <div class="input-content">
+                    <div class="input-pane active" id="paneDemo">
+                        <div class="demo-card">
+                            <div class="demo-icon">🧪</div>
+                            <h3>Demo: Buggy Calculator</h3>
+                            <p>A Python calculator with intentional bugs — division by zero, eval() injection, mutable defaults, and more. Watch the agents find and fix them all.</p>
+                            <div class="demo-bugs">
+                                <span class="bug-tag critical">Division by Zero</span>
+                                <span class="bug-tag critical">eval() Injection</span>
+                                <span class="bug-tag high">Mutable Default</span>
+                                <span class="bug-tag high">Bare Except</span>
+                                <span class="bug-tag medium">Hardcoded Secrets</span>
+                                <span class="bug-tag low">Unused Imports</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input-pane" id="panePath">
+                        <div class="field">
+                            <label for="pathInput">Project Path</label>
+                            <input type="text" id="pathInput" placeholder="/path/to/your/python/project" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="input-pane" id="paneUrl">
+                        <div class="field">
+                            <label for="urlInput">Git Repository URL</label>
+                            <input type="text" id="urlInput" placeholder="https://github.com/user/repo.git" autocomplete="off">
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-primary" id="startBtn" onclick="startReview()">
+                    <span class="btn-icon">🚀</span>
+                    <span class="btn-text">Launch Code Review</span>
+                    <span class="btn-loader" id="btnLoader"></span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ─── Pipeline Visualization ─── -->
+        <section class="panel pipeline-panel" id="pipelinePanel" style="display: none;">
+            <div class="panel-header">
+                <h2>🔄 Agent Pipeline</h2>
+                <div class="pipeline-meta">
+                    <span class="retry-badge" id="retryBadge" style="display:none;">Retry #<span id="retryCount">0</span></span>
+                    <span class="timer" id="timer">0.0s</span>
+                </div>
+            </div>
+            <div class="pipeline-steps">
+                <div class="pipeline-step" id="step-analyzer" data-step="analyzer">
+                    <div class="step-connector"></div>
+                    <div class="step-icon">
+                        <span>🔍</span>
+                    </div>
+                    <div class="step-info">
+                        <div class="step-name">Analyzer</div>
+                        <div class="step-desc">Scanning code</div>
+                    </div>
+                    <div class="step-status">
+                        <span class="step-badge">Pending</span>
+                    </div>
+                </div>
+                <div class="pipeline-step" id="step-planner" data-step="planner">
+                    <div class="step-connector"></div>
+                    <div class="step-icon">
+                        <span>📋</span>
+                    </div>
+                    <div class="step-info">
+                        <div class="step-name">Planner</div>
+                        <div class="step-desc">Creating fix plan</div>
+                    </div>
+                    <div class="step-status">
+                        <span class="step-badge">Pending</span>
+                    </div>
+                </div>
+                <div class="pipeline-step" id="step-fixer" data-step="fixer">
+                    <div class="step-connector"></div>
+                    <div class="step-icon">
+                        <span>🔧</span>
+                    </div>
+                    <div class="step-info">
+                        <div class="step-name">Fixer</div>
+                        <div class="step-desc">Implementing fixes</div>
+                    </div>
+                    <div class="step-status">
+                        <span class="step-badge">Pending</span>
+                    </div>
+                </div>
+                <div class="pipeline-step" id="step-verifier" data-step="verifier">
+                    <div class="step-connector"></div>
+                    <div class="step-icon">
+                        <span>✅</span>
+                    </div>
+                    <div class="step-info">
+                        <div class="step-name">Verifier</div>
+                        <div class="step-desc">Validating fixes</div>
+                    </div>
+                    <div class="step-status">
+                        <span class="step-badge">Pending</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ─── Live Activity Feed ─── -->
+        <section class="panel activity-panel" id="activityPanel" style="display: none;">
+            <div class="panel-header">
+                <h2>📡 Live Agent Activity</h2>
+                <button class="btn-ghost" id="clearActivity" onclick="clearActivityFeed()">Clear</button>
+            </div>
+            <div class="activity-feed" id="activityFeed">
+                <div class="activity-empty">
+                    <span>Waiting for agents to start...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ─── Results Panel ─── -->
+        <section class="panel results-panel" id="resultsPanel" style="display: none;">
+            <div class="panel-header">
+                <h2>📊 Results</h2>
+            </div>
+            <div class="result-tabs" id="resultTabs">
+                <button class="result-tab active" data-result="issues" onclick="switchResultTab('issues')">
+                    🐛 Issues <span class="tab-count" id="issueCount">0</span>
+                </button>
+                <button class="result-tab" data-result="plan" onclick="switchResultTab('plan')">
+                    📋 Fix Plan
+                </button>
+                <button class="result-tab" data-result="diffs" onclick="switchResultTab('diffs')">
+                    📝 Code Diffs
+                </button>
+                <button class="result-tab" data-result="report" onclick="switchResultTab('report')">
+                    📄 Report
+                </button>
+            </div>
+            <div class="result-content" id="resultContent">
+                <!-- Issues Tab -->
+                <div class="result-pane active" id="resultIssues">
+                    <div class="issues-list" id="issuesList"></div>
+                </div>
+                <!-- Fix Plan Tab -->
+                <div class="result-pane" id="resultPlan">
+                    <div class="plan-content" id="planContent"></div>
+                </div>
+                <!-- Diffs Tab -->
+                <div class="result-pane" id="resultDiffs">
+                    <div class="diffs-content" id="diffsContent"></div>
+                </div>
+                <!-- Report Tab -->
+                <div class="result-pane" id="resultReport">
+                    <div class="report-content" id="reportContent"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ─── Footer ─── -->
+    <footer class="footer">
+        <p>Built with <span class="accent">Antigravity</span> • Multi-Agent Agentic Workflow • Powered by Claude AI</p>
+    </footer>
+
+    <script src="/js/websocket.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>

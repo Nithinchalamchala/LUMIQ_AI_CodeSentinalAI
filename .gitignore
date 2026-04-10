@@ -1,0 +1,8 @@
+venv/
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.tmp_workspaces/
+.DS_Store
+API_CHECK/
