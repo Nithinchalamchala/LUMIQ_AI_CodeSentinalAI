@@ -163,6 +163,11 @@ function handleStatusUpdate(data) {
         } else if (currentJobId) {
             fetchResults(currentJobId);
         }
+
+        // Auto-scroll to results
+        setTimeout(() => {
+            document.getElementById('resultsPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 500);
     }
 }
 
@@ -246,6 +251,11 @@ function renderResults(result) {
         diffsContent.innerHTML = '<div class="activity-empty">No code changes applied.</div>';
     }
 
+    // Reasoning Trace
+    const traceContent = document.getElementById('traceContent');
+    traceContent.innerHTML = '';
+    traceContent.appendChild(Components.createReasoningTrace(result));
+
     // Report
     const reportContent = document.getElementById('reportContent');
     reportContent.innerHTML = '';
@@ -281,6 +291,7 @@ function switchResultTab(tabName) {
     document.getElementById('resultIssues').classList.toggle('active', tabName === 'issues');
     document.getElementById('resultPlan').classList.toggle('active', tabName === 'plan');
     document.getElementById('resultDiffs').classList.toggle('active', tabName === 'diffs');
+    document.getElementById('resultTrace').classList.toggle('active', tabName === 'trace');
     document.getElementById('resultReport').classList.toggle('active', tabName === 'report');
 }
 
@@ -324,6 +335,7 @@ function resetPipeline() {
     document.getElementById('issuesList').innerHTML = '';
     document.getElementById('planContent').innerHTML = '';
     document.getElementById('diffsContent').innerHTML = '';
+    document.getElementById('traceContent').innerHTML = '';
     document.getElementById('reportContent').innerHTML = '';
     document.getElementById('issueCount').textContent = '0';
 

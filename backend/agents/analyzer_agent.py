@@ -59,13 +59,15 @@ class AnalyzerAgent(BaseAgent):
         await self.emit_event("started", "Starting code analysis",
                               f"Scanning {target_path}")
 
+        import asyncio
+
         all_issues: list[Issue] = []
 
         # ── Step 1: AST Parsing ──
         await self.emit_event("tool_use", "Running AST Parser",
                               "Detecting structural issues, unused imports, dangerous patterns")
         try:
-            ast_issues = self.parser.analyze_directory(target_path)
+            ast_issues = await asyncio.to_thread(self.parser.analyze_directory, target_path)
             all_issues.extend(ast_issues)
             await self.emit_event("result", f"AST Parser found {len(ast_issues)} issues",
                                   self._summarize_issues(ast_issues))
@@ -76,7 +78,7 @@ class AnalyzerAgent(BaseAgent):
         await self.emit_event("tool_use", "Running Pylint",
                               "Checking code style, errors, and conventions")
         try:
-            lint_issues = self.linter.analyze_directory(target_path)
+            lint_issues = await asyncio.to_thread(self.linter.analyze_directory, target_path)
             all_issues.extend(lint_issues)
             await self.emit_event("result", f"Pylint found {len(lint_issues)} issues",
                                   self._summarize_issues(lint_issues))
@@ -87,7 +89,7 @@ class AnalyzerAgent(BaseAgent):
         await self.emit_event("tool_use", "Running Security Scanner (Bandit)",
                               "Scanning for security vulnerabilities")
         try:
-            sec_issues = self.scanner.analyze_directory(target_path)
+            sec_issues = await asyncio.to_thread(self.scanner.analyze_directory, target_path)
             all_issues.extend(sec_issues)
             await self.emit_event("result", f"Bandit found {len(sec_issues)} security issues",
                                   self._summarize_issues(sec_issues))
@@ -98,7 +100,7 @@ class AnalyzerAgent(BaseAgent):
         await self.emit_event("tool_use", "Running Complexity Analyzer (Radon)",
                               "Measuring cyclomatic complexity")
         try:
-            cx_issues = self.complexity.analyze_directory(target_path)
+            cx_issues = await asyncio.to_thread(self.complexity.analyze_directory, target_path)
             all_issues.extend(cx_issues)
             await self.emit_event("result", f"Radon found {len(cx_issues)} complexity issues",
                                   self._summarize_issues(cx_issues))
@@ -214,10 +216,20 @@ Return ONLY valid JSON array, no extra text."""
     def _get_demo_response(self, prompt: str) -> str:
         """Demo mode enrichment response."""
         return json.dumps([
-            {"index": 0, "description": "Division by zero will crash the program when dividing by 0.",
-             "suggested_fix": "Add a check: if divisor == 0: raise ValueError('Cannot divide by zero')"},
-            {"index": 1, "description": "Using eval() on untrusted input allows arbitrary code execution.",
-             "suggested_fix": "Use ast.literal_eval() for safe evaluation of literal expressions."},
-            {"index": 2, "description": "Mutable default argument is shared between all function calls.",
-             "suggested_fix": "Use None as default, then: if param is None: param = []"},
+            {"index": 0, "description": "Using eval() on untrusted input allows arbitrary code execution — an attacker can run os.system('rm -rf /') via this endpoint.",
+             "suggested_fix": "Replace eval() with ast.literal_eval() for safe evaluation of literal expressions."},
+            {"index": 1, "description": "exec() executes arbitrary Python code from a string, enabling full remote code execution if the input is user-controlled.",
+             "suggested_fix": "Remove exec() entirely and use a safe config parser like json.load() or configparser."},
+            {"index": 2, "description": "Using eval() here allows arbitrary code injection — any user input is executed as Python code.",
+             "suggested_fix": "Replace with ast.literal_eval() or a proper expression parser."},
+            {"index": 3, "description": "Mutable default argument [] is shared across all function calls, causing results to accumulate between invocations.",
+             "suggested_fix": "Use None as default: def batch_calculate(operations, results=None): if results is None: results = []"},
+            {"index": 4, "description": "Bare 'except:' catches SystemExit and KeyboardInterrupt, making the program impossible to kill cleanly.",
+             "suggested_fix": "Replace 'except:' with 'except Exception as e:' to only catch standard errors."},
+            {"index": 5, "description": "No zero-division guard — calling divide(10, 0) will crash with an unhandled ZeroDivisionError.",
+             "suggested_fix": "Add: if b == 0: raise ValueError('Cannot divide by zero')"},
+            {"index": 6, "description": "os.system() passes the command string directly to the shell, enabling command injection attacks.",
+             "suggested_fix": "Use subprocess.run() with a list of arguments and shell=False."},
+            {"index": 7, "description": "pickle.loads() on untrusted data can execute arbitrary code during deserialization.",
+             "suggested_fix": "Use json.loads() or a safe serialization format instead of pickle for untrusted data."},
         ])

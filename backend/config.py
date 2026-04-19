@@ -14,9 +14,9 @@ FRONTEND_DIR = BASE_DIR / "frontend"
 SAMPLE_PROJECTS_DIR = BASE_DIR / "sample_projects"
 TEMP_DIR = Path("/tmp/codesentinel_workspaces")
 
-# --- Anthropic API ---
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-MODEL_NAME = os.getenv("MODEL_NAME", "claude-sonnet-4-20250514")
+# --- Local LLM Settings (Ollama) ---
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/api/generate")
+MODEL_NAME = os.getenv("MODEL_NAME", "llama3")
 
 # --- Pipeline Settings ---
 DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"

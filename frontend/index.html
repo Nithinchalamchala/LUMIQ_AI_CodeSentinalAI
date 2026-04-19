@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CodeSentinel AI — Autonomous Code Review Agent</title>
     <meta name="description" content="AI-powered multi-agent code review pipeline that analyzes, plans, fixes, and verifies code autonomously.">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2L4 8v16l12 6 12-6V8L16 2z' stroke='%237C3AED' stroke-width='2' fill='none'/%3E%3Cpath d='M10 16l4 4 8-8' stroke='%2306B6D4' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -197,6 +198,9 @@
                 <button class="result-tab" data-result="diffs" onclick="switchResultTab('diffs')">
                     📝 Code Diffs
                 </button>
+                <button class="result-tab" data-result="trace" onclick="switchResultTab('trace')">
+                    🧠 Reasoning Trace
+                </button>
                 <button class="result-tab" data-result="report" onclick="switchResultTab('report')">
                     📄 Report
                 </button>
@@ -214,6 +218,10 @@
                 <div class="result-pane" id="resultDiffs">
                     <div class="diffs-content" id="diffsContent"></div>
                 </div>
+                <!-- Reasoning Trace Tab -->
+                <div class="result-pane" id="resultTrace">
+                    <div class="trace-content" id="traceContent"></div>
+                </div>
                 <!-- Report Tab -->
                 <div class="result-pane" id="resultReport">
                     <div class="report-content" id="reportContent"></div>
@@ -224,7 +232,7 @@
 
     <!-- ─── Footer ─── -->
     <footer class="footer">
-        <p>Built with <span class="accent">Antigravity</span> • Multi-Agent Agentic Workflow • Powered by Claude AI</p>
+        <p>Built by <strong>Anjaninithin Chalamchala</strong> • <span class="accent">CodeSentinel AI</span> • Multi-Agent Agentic Workflow • Powered by Claude AI</p>
     </footer>
 
     <script src="/js/websocket.js"></script>

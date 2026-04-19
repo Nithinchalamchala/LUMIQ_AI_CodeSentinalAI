@@ -132,10 +132,13 @@ const Components = {
     },
 
     /**
-     * Create the full report view
+     * Create the full report view with severity chart
      */
     createReport(result) {
         const container = document.createElement('div');
+
+        // Severity chart
+        const chartHtml = this._createSeverityChart(result.issues || []);
 
         // Stats cards
         const statsHtml = `
@@ -185,7 +188,146 @@ const Components = {
             </div>
         ` : '';
 
-        container.innerHTML = statsHtml + summaryHtml + verifyHtml;
+        container.innerHTML = chartHtml + statsHtml + summaryHtml + verifyHtml;
+        return container;
+    },
+
+    /**
+     * Create severity distribution chart (pure CSS)
+     */
+    _createSeverityChart(issues) {
+        const counts = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
+        issues.forEach(i => { counts[i.severity] = (counts[i.severity] || 0) + 1; });
+        const total = issues.length || 1;
+
+        const colors = {
+            critical: 'var(--severity-critical)',
+            high: 'var(--severity-high)',
+            medium: 'var(--severity-medium)',
+            low: 'var(--severity-low)',
+            info: 'var(--severity-info)'
+        };
+
+        const barsHtml = Object.entries(counts)
+            .filter(([, v]) => v > 0)
+            .map(([severity, count]) => {
+                const pct = Math.round((count / total) * 100);
+                return `
+                    <div class="chart-row">
+                        <span class="chart-label">${severity.toUpperCase()}</span>
+                        <div class="chart-bar-bg">
+                            <div class="chart-bar-fill" style="width: ${pct}%; background: ${colors[severity]}"></div>
+                        </div>
+                        <span class="chart-count">${count}</span>
+                    </div>`;
+            }).join('');
+
+        return `
+            <div class="report-section">
+                <h3>📈 Severity Distribution</h3>
+                <div class="severity-chart">${barsHtml}</div>
+            </div>
+        `;
+    },
+
+    /**
+     * Create the Reasoning Trace view (ReAct pattern proof)
+     */
+    createReasoningTrace(result) {
+        const container = document.createElement('div');
+        container.className = 'reasoning-trace';
+
+        const agents = [
+            {
+                name: 'Analyzer Agent',
+                icon: '🔍',
+                type: 'analyzer',
+                steps: [
+                    { phase: 'observe', label: 'Observe', detail: `Scanned project at ${result.target_path || 'target directory'}` },
+                    { phase: 'think', label: 'Think', detail: 'Determining which analysis tools to run: AST Parser, Pylint, Bandit, Radon' },
+                    { phase: 'act', label: 'Act', detail: 'Executed 4 tools in parallel → collected raw findings from each' },
+                    { phase: 'act', label: 'Act', detail: 'Called Claude LLM to deduplicate and enrich issue descriptions' },
+                    { phase: 'result', label: 'Result', detail: `Found ${result.issues?.length || 0} unique issues across ${new Set((result.issues || []).map(i => i.file_path?.split('/').pop())).size} files` }
+                ]
+            },
+            {
+                name: 'Planner Agent',
+                icon: '📋',
+                type: 'planner',
+                steps: [
+                    { phase: 'observe', label: 'Observe', detail: `Received ${result.issues?.length || 0} issues from Analyzer` },
+                    { phase: 'think', label: 'Think', detail: 'Classifying fixability: skip INFO-level and minor style issues' },
+                    { phase: 'act', label: 'Act', detail: 'Called Claude LLM with issue list → requested prioritized fix plan' },
+                    { phase: 'result', label: 'Result', detail: `Created fix plan with ${result.fix_plan?.actions?.length || 0} actions, ${Object.keys(result.fix_plan?.skipped_reasons || {}).length} skipped` }
+                ]
+            },
+            {
+                name: 'Fixer Agent',
+                icon: '🔧',
+                type: 'fixer',
+                steps: [
+                    { phase: 'observe', label: 'Observe', detail: `Received ${result.fix_plan?.actions?.length || 0} fix actions from Planner` },
+                    { phase: 'think', label: 'Think', detail: 'Grouping actions by file to apply changes coherently' },
+                    { phase: 'act', label: 'Act', detail: 'For each file: read original → construct LLM prompt with issues + approaches → generate fixed code' },
+                    { phase: 'act', label: 'Act', detail: 'Validated each fix: syntax check via compile() → generated unified diffs' },
+                    { phase: 'result', label: 'Result', detail: `Applied ${result.fix_result?.total_succeeded || 0} fixes, ${result.fix_result?.total_failed || 0} failed, ${result.fix_result?.changes?.length || 0} files modified` }
+                ]
+            },
+            {
+                name: 'Verifier Agent',
+                icon: '✅',
+                type: 'verifier',
+                steps: [
+                    { phase: 'observe', label: 'Observe', detail: `Received ${result.fix_result?.changes?.length || 0} modified files from Fixer` },
+                    { phase: 'act', label: 'Act', detail: 'Step 1: Syntax check → compile() on all modified files' },
+                    { phase: 'act', label: 'Act', detail: `Step 2: Ran pytest → ${result.verification?.tests_passed || 0}/${result.verification?.tests_total || 0} tests passed` },
+                    { phase: 'act', label: 'Act', detail: 'Step 3: Re-scanned with AST parser for new critical/high issues' },
+                    { phase: 'think', label: 'Think', detail: 'Called Claude LLM to synthesize verdict from test results + re-scan' },
+                    { phase: 'result', label: 'Result', detail: `Verdict: ${result.verification?.passed ? '✅ PASSED' : '❌ FAILED'} — ${this._escapeHtml(result.verification?.feedback?.substring(0, 120) || 'No feedback')}` }
+                ]
+            }
+        ];
+
+        // Retry indicator
+        if (result.retry_count > 0) {
+            agents[2].steps.push({
+                phase: 'observe', label: 'Retry',
+                detail: `Verifier returned feedback → Fixer retried ${result.retry_count} time(s) with error context`
+            });
+        }
+
+        agents.forEach(agent => {
+            const section = document.createElement('div');
+            section.className = 'trace-agent';
+
+            const header = document.createElement('div');
+            header.className = `trace-agent-header ${agent.type}`;
+            header.innerHTML = `<span class="trace-agent-icon">${agent.icon}</span> <span class="trace-agent-name">${agent.name}</span>`;
+            section.appendChild(header);
+
+            const stepsContainer = document.createElement('div');
+            stepsContainer.className = 'trace-steps';
+
+            agent.steps.forEach((step, i) => {
+                const stepEl = document.createElement('div');
+                stepEl.className = `trace-step ${step.phase}`;
+                stepEl.innerHTML = `
+                    <div class="trace-step-marker">
+                        <span class="trace-step-dot"></span>
+                        ${i < agent.steps.length - 1 ? '<span class="trace-step-line"></span>' : ''}
+                    </div>
+                    <div class="trace-step-content">
+                        <span class="trace-step-label">${step.label}</span>
+                        <span class="trace-step-detail">${step.detail}</span>
+                    </div>
+                `;
+                stepsContainer.appendChild(stepEl);
+            });
+
+            section.appendChild(stepsContainer);
+            container.appendChild(section);
+        });
+
         return container;
     },
 

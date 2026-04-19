@@ -45,13 +45,15 @@ class GitTools:
     def generate_diff(self, original_content: str, modified_content: str,
                       file_path: str = "file.py") -> str:
         """Generate a unified diff between original and modified content."""
+        # Use just the basename for cleaner diff headers
+        display_path = os.path.basename(file_path) if '/' in file_path else file_path
         original_lines = original_content.splitlines(keepends=True)
         modified_lines = modified_content.splitlines(keepends=True)
 
         diff = difflib.unified_diff(
             original_lines, modified_lines,
-            fromfile=f"a/{file_path}",
-            tofile=f"b/{file_path}",
+            fromfile=f"a/{display_path}",
+            tofile=f"b/{display_path}",
             lineterm=""
         )
         return "\n".join(diff)

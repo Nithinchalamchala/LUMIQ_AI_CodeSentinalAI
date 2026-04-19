@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Callable, Optional
 
 from backend.models import AgentEvent, AgentType
-from backend.config import ANTHROPIC_API_KEY, MODEL_NAME, DEMO_MODE
+from backend.config import OLLAMA_BASE_URL, MODEL_NAME, DEMO_MODE
 
 logger = logging.getLogger(__name__)
 
@@ -52,31 +52,38 @@ class BaseAgent(ABC):
         ...
 
     def _get_client(self):
-        """Lazily initialize the Anthropic client."""
-        if self._client is None and not DEMO_MODE:
-            try:
-                import anthropic
-                self._client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-            except Exception as e:
-                logger.error(f"Failed to initialize Anthropic client: {e}")
-                raise
-        return self._client
+        """No client needed for simple HTTP to local Ollama API."""
+        return None
 
     async def _call_llm(self, prompt: str, max_tokens: int = 4096) -> str:
-        """Call Claude API with the given prompt."""
+        """Call Local LLM via plain HTTP (e.g., Ollama)."""
         if DEMO_MODE:
             return self._get_demo_response(prompt)
 
-        client = self._get_client()
+        import urllib.request
+        import json
+
+        data = {
+            "model": MODEL_NAME,
+            "prompt": f"{self.system_prompt}\n\n{prompt}",
+            "stream": False,
+            "options": {
+                "num_predict": max_tokens
+            }
+        }
+        req = urllib.request.Request(
+            OLLAMA_BASE_URL,
+            data=json.dumps(data).encode("utf-8"),
+            headers={"Content-Type": "application/json"}
+        )
+
         try:
-            response = await asyncio.to_thread(
-                client.messages.create,
-                model=MODEL_NAME,
-                max_tokens=max_tokens,
-                system=self.system_prompt,
-                messages=[{"role": "user", "content": prompt}]
-            )
-            return response.content[0].text
+            def fetch():
+                with urllib.request.urlopen(req) as response:
+                    return json.loads(response.read().decode("utf-8"))
+
+            res_json = await asyncio.to_thread(fetch)
+            return res_json.get("response", "")
         except Exception as e:
             logger.error(f"[{self.name}] LLM call failed: {e}")
             return f"Error: {e}"
@@ -97,4 +104,7 @@ class BaseAgent(ABC):
         )
         if self._event_callback:
             await self._event_callback(event)
+        # In demo mode, add delay so WebSocket can stream events visibly
+        if DEMO_MODE:
+            await asyncio.sleep(0.35)
         return event

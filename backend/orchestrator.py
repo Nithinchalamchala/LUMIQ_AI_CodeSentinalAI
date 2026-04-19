@@ -72,7 +72,7 @@ class Orchestrator:
             if repo_url:
                 result.status = PipelineStatus.ANALYZING
                 workspace = os.path.join(str(TEMP_DIR), f"ws_{result.job_id[:8]}")
-                target_path = self.git_tools.clone_repo(repo_url, workspace)
+                target_path = await asyncio.to_thread(self.git_tools.clone_repo, repo_url, workspace)
                 result.target_path = target_path
 
             if not target_path or not os.path.exists(target_path):
@@ -83,7 +83,7 @@ class Orchestrator:
             # Create a working copy for modifications
             workspace_dir = os.path.join(str(TEMP_DIR), f"ws_{result.job_id[:8]}")
             if not workspace:
-                workspace = self.git_tools.create_workspace(target_path, workspace_dir)
+                workspace = await asyncio.to_thread(self.git_tools.create_workspace, target_path, workspace_dir)
             working_path = workspace
 
             # Shared context passed between agents

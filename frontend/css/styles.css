@@ -1051,6 +1051,169 @@ body {
     margin-top: var(--space-xs);
 }
 
+/* ── Severity Chart ── */
+.severity-chart {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.chart-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.chart-label {
+    width: 80px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.chart-bar-bg {
+    flex: 1;
+    height: 24px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.chart-bar-fill {
+    height: 100%;
+    border-radius: var(--radius-sm);
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: barGrow 0.8s ease-out;
+}
+
+@keyframes barGrow {
+    from { width: 0 !important; }
+}
+
+.chart-count {
+    width: 32px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    flex-shrink: 0;
+}
+
+/* ── Reasoning Trace ── */
+.reasoning-trace {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.trace-agent {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: var(--transition-base);
+    animation: fadeIn 0.5s ease;
+}
+
+.trace-agent:hover {
+    border-color: var(--border-hover);
+}
+
+.trace-agent-header {
+    padding: var(--space-md) var(--space-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-weight: 700;
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--border-glass);
+}
+
+.trace-agent-header.analyzer { background: rgba(124, 58, 237, 0.08); }
+.trace-agent-header.planner { background: rgba(59, 130, 246, 0.08); }
+.trace-agent-header.fixer { background: rgba(16, 185, 129, 0.08); }
+.trace-agent-header.verifier { background: rgba(6, 182, 212, 0.08); }
+
+.trace-agent-icon {
+    font-size: 1.2rem;
+}
+
+.trace-steps {
+    padding: var(--space-md) var(--space-lg) var(--space-lg);
+}
+
+.trace-step {
+    display: flex;
+    gap: var(--space-md);
+    min-height: 40px;
+}
+
+.trace-step-marker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 20px;
+    flex-shrink: 0;
+    padding-top: 4px;
+}
+
+.trace-step-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--border-glass);
+    background: var(--bg-secondary);
+    flex-shrink: 0;
+    z-index: 1;
+}
+
+.trace-step-line {
+    width: 2px;
+    flex: 1;
+    background: var(--border-glass);
+    margin: 2px 0;
+}
+
+.trace-step-content {
+    padding-bottom: var(--space-md);
+    flex: 1;
+}
+
+.trace-step-label {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: var(--radius-full);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.trace-step-detail {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* Trace phase colors */
+.trace-step.observe .trace-step-dot { border-color: var(--accent-blue); background: rgba(59, 130, 246, 0.2); }
+.trace-step.observe .trace-step-label { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+
+.trace-step.think .trace-step-dot { border-color: var(--accent-purple); background: rgba(124, 58, 237, 0.2); }
+.trace-step.think .trace-step-label { background: rgba(124, 58, 237, 0.15); color: var(--accent-purple); }
+
+.trace-step.act .trace-step-dot { border-color: var(--accent-yellow); background: rgba(245, 158, 11, 0.2); }
+.trace-step.act .trace-step-label { background: rgba(245, 158, 11, 0.15); color: var(--accent-yellow); }
+
+.trace-step.result .trace-step-dot { border-color: var(--accent-green); background: rgba(16, 185, 129, 0.2); }
+.trace-step.result .trace-step-label { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
+
 /* ── Footer ── */
 .footer {
     text-align: center;
