@@ -1,24 +1,59 @@
-# CodeSentinel AI
+# CodeSentinel AI - Autonomous Code Review Agent
 
 ## Overview
-CodeSentinel AI is an autonomous, multi-agent code review pipeline designed to analyze, plan, fix, and verify code quality. Built upon the ReAct (Reasoning and Acting) agentic architecture, it orchestrates multiple specialized AI agents working alongside deterministic static analysis tools to identify and remediate vulnerabilities, logic errors, and anti-patterns.
+CodeSentinel AI is a sophisticated, multi-agent code review pipeline designed to autonomously analyze, plan, fix, and verify code quality. Built upon the ReAct (Reasoning and Acting) agentic architecture, it orchestrates multiple specialized AI workflows alongside deterministic static analysis tools. This ensures high-accuracy remediation of vulnerabilities, logic errors, and anti-patterns without the hallucination risks common in standard LLM implementations.
 
-## Architecture
+## Key Features
+- Privacy-First Execution: Entirely powered by local Large Language Models (LLaMA 3 via Ollama), ensuring zero data exfiltration or third-party API dependencies.
+- Multi-Agent Orchestration: Utilizes a four-stage ReAct pipeline (Analyze, Plan, Fix, Verify) to simulate a Senior DevOps Engineer's review process.
+- Deterministic Tooling Integration: Combines LLM heuristics with concrete AST parsing, Pylint, Bandit, and Radon metrics.
+- Asynchronous Event Streaming: Leverages FastAPI WebSockets to stream agent thought processes and state changes in real-time to the frontend.
+- Glassmorphism UI: A clean, lightweight, and modern dashboard with syntax-highlighted diff viewers.
 
-The system utilizes a decentralized agent workflow powered by a local Large Language Model (LLaMA 3 via Ollama) and a real-time event streaming backend:
+## System Architecture
 
-1. Analyzer Agent: Parses abstract syntax trees (AST) and coordinates deterministic tools (Pylint, Bandit, Radon) to gather factual intelligence about the codebase without LLM hallucination.
-2. Planner Agent: Synthesizes the analysis reports to formulate a step-by-step remediation strategy.
-3. Fixer Agent: Executes the planned changes, rewriting the code to apply fixes.
-4. Verifier Agent: Validates the applied fixes against security and syntax standards to ensure structural integrity post-modification.
+The core of CodeSentinel AI revolves around a continuous feedback loop among four specialized agents:
 
-The backend is built with FastAPI and utilizes WebSockets to stream the agents' internal thought processes directly to a clean, glassmorphism-styled frontend UI.
+1. Analyzer Agent: 
+   - Ingests the target repository or script.
+   - Executes non-blocking system tool calls (Pylint, Bandit, AST analysis) in thread pools.
+   - Aggregates raw, deterministic metrics regarding syntax validity and security context.
+
+2. Planner Agent: 
+   - Processes the Analyzer's report.
+   - Formulates a step-by-step execution plan to remediate detected issues while preserving the original business logic.
+
+3. Fixer Agent: 
+   - Executes the remediation plan.
+   - Performs localized code modifications, adhering to PEP-8 standards and fixing recognized security flaws (e.g., hardcoded secrets, injection vulnerabilities).
+
+4. Verifier Agent: 
+   - Re-evaluates the modified code against the original constraints.
+   - Triggers a rollback or secondary fix cycle if the new code introduces syntax errors.
+
+## Directory Structure
+```text
+LUMIQ_AI_CodeSentinalAI/
+├── backend/
+│   ├── agents/          # Core logic for ReAct agents
+│   ├── tools/           # Wrappers for Bandit, Pylint, Pytest, AST
+│   ├── config.py        # Environment and LLM configuration
+│   ├── main.py          # FastAPI application and WebSocket routing
+│   └── orchestrator.py  # Manages the pipeline state and data handoffs
+├── frontend/
+│   ├── css/             # Light theme styling
+│   ├── js/              # WebSocket client and UI state management
+│   └── index.html       # Dashboard interface
+├── requirements.txt     # Python dependencies
+├── README.md            # Project documentation
+└── ARCHITECTURE.md      # Detailed system flow diagram
+```
 
 ## Technical Stack
-- Backend: Python, FastAPI, Uvicorn, WebSockets, asyncio
-- AI Integration: Local LLM (Ollama / LLaMA 3) via native HTTP integrations
-- Analysis Tools: AST, Pylint, Bandit, Radon, Pytest
-- Frontend: Vanilla HTML, CSS (Light Theme), JavaScript
+- Backend System: Python 3.9+, FastAPI, Uvicorn, Asyncio, WebSockets
+- Agentic Engine: Local LLM (Ollama hosting LLaMA 3) via native HTTP integrations
+- Static Analysis: AST, Pylint, Bandit, Radon, Pytest
+- Frontend Interface: Vanilla HTML5, CSS3 Custom Properties, Vanilla JavaScript
 
 ## Setup and Installation
 
@@ -35,27 +70,39 @@ The backend is built with FastAPI and utilizes WebSockets to stream the agents' 
    cd LUMIQ_AI_CodeSentinalAI
    ```
 
-2. Create a virtual environment and activate it:
+2. Create and activate a virtual environment:
    ```bash
+   # Unix/macOS
    python3 -m venv venv
    source venv/bin/activate
+   
+   # Windows
+   python -m venv venv
+   venv\Scripts\activate
    ```
 
-3. Install the required dependencies:
+3. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-4. Start the backend server:
+4. Launch the application:
    ```bash
    uvicorn backend.main:app --reload
    ```
 
-5. Access the application:
-   Open a web browser and navigate to http://127.0.0.1:8000
+5. Access the user interface:
+   Open a web browser and navigate to: http://127.0.0.1:8000
 
-## Usage
-1. Configure a Local Path or Git repository URL in the UI.
-2. Click "Launch Code Review".
-3. Monitor the live WebSocket feed as the agents observe, think, act, and verify the codebase.
-4. Review the generated Diff viewer for the concrete code changes before applying or merging.
+## Usage Guide
+1. Ensure your local Ollama instance is running in the background.
+2. Open the CodeSentinel AI dashboard on localhost.
+3. Input the absolute path of a local project directory or a public Git repository URL.
+4. Click "Launch Code Review".
+5. Observe the real-time WebSocket feed displaying the granular progression of the Analyzer, Planner, Fixer, and Verifier.
+6. Evaluate the presented code diffs to approve the synthesized security and quality improvements.
+
+## Future Scope
+- CI/CD Pipeline Integration (GitHub Actions / GitLab CI)
+- Expansion of compatibility layers for JavaScript/TypeScript, Go, and Rust.
+- Containerization using Docker for isolated execution of the generated code.
