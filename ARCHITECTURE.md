@@ -35,7 +35,7 @@ flowchart TB
         A1 -->|Raw Issues| A2
         A2 -->|Fix Plan| A3
         A3 -->|Modified Files| A4
-        A4 -.->|Test Traceback<br/>(Self-Healing Loop)| A3
+        A4 -.->|"Test Traceback<br/>(Self-Healing Loop)"| A3
     end
 
     subgraph Tools ["🛠️ Deterministic Static Analysis Tools"]
